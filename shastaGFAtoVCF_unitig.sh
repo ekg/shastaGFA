@@ -3,9 +3,10 @@
 input=$1
 cov_min=$2
 unitig_extend=$3
-reference=$4
-min_variant_size=$5
-minimap2_threads=$6
+unitig_min_begin=$4
+reference=$5
+min_variant_size=$6
+minimap2_threads=$7
 base=$(basename $input .gfa)
 
 # dependencies
@@ -19,7 +20,7 @@ base=$(basename $input .gfa)
 
 gimbricate -g $input -c $cov_min | vg view -F - >$base.blunt.gfa
 odgi build -g $base.blunt.gfa -s -o $base.og
-odgi unitig -i $base.og -p $unitig_extend \
+odgi unitig -i $base.og -l $unitig_min_begin -p $unitig_extend \
     | minimap2 -t $minimap2_threads -c --cs $reference /dev/stdin \
     | sort -k6,6 -k8,8n \
     | paftools.js call - >$base.paftools.vcf
