@@ -20,7 +20,11 @@ base=$(basename $input .gfa)
 
 gimbricate -g $input -c $cov_min | vg view -F - >$base.blunt.gfa
 odgi build -g $base.blunt.gfa -s -o $base.og
-odgi unitig -i $base.og -l $unitig_min_begin -p $unitig_extend -f | pigz >$base.unitig.fq.gz
+odgi unitig -i $base.og -l $unitig_min_begin -p $unitig_extend -f \
+    | paste - - - - \
+    | perl -ne '@x=split m/\t/; unshift @x, length($x[1]); print join "\t",@x;' \
+    | sort -nr \
+    | cut -f2- | tr "\t" "\n" | pigz >$base.unitig.fq.gz
 minimap2 -t $minimap2_threads -c --cs $reference $base.unitig.fq.gz \
     | sort -k6,6 -k8,8n \
     | paftools.js call - >$base.paftools.vcf
