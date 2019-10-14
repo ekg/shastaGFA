@@ -26,11 +26,11 @@ odgi unitig -i $base.og -l $unitig_min_begin -p $unitig_extend -f \
     | perl -ne '@x=split m/\t/; unshift @x, length($x[1]); print join "\t",@x;' \
     | sort -nr \
     | cut -f2- | tr "\t" "\n" | pigz >$base.unitig.fq.gz
-minimap2 -t $minimap2_threads -c --cs $reference $base.unitig.fq.gz \
+minimap2 -t $minimap2_threads -r 25000 -c --cs $reference $base.unitig.fq.gz \
     | sort -k6,6 -k8,8n \
     | paftools.js call - >$base.paftools.vcf
 <$base.paftools.vcf awk 'function abs(v) {return v < 0 ? -v : v} /^V/ && abs(length($7) - length($8)) >'$min_variant_size' { x=abs(length($7) - length($8)); print $2, $3-x, $4+x }' | tr ' ' '\t' | sort -V | uniq | bedtools merge -i - >$base.sv.bed
-minimap2 -t $minimap2_threads -c -a $reference $base.unitig.fq.gz \
+minimap2 -t $minimap2_threads -r 25000 -c -a $reference $base.unitig.fq.gz \
     | samtools view -b - >$base.unitigs.raw.bam
 samtools sort $base.unitigs.raw.bam >$base.unitigs.bam
 rm -f $base.unitigs.raw.bam
